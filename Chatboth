@@ -340,8 +340,7 @@
                                         "roomid": room_id
                                         },success:function(json){ 
                                             $( ".chat-customer" ).remove();
-                                            $( ".chat-self" ).remove();
-                                            // $(".text-box").css("display","none");  
+                                            $( ".chat-self" ).remove(); 
                                             get_info_chat_hendle(user_id); 
                                         }
                                 });
@@ -422,7 +421,6 @@
 
     //Read chat function
     function read_chat(user_id,room_id,customer_name){
-        //  console.log(user_id+' '+room_id+' '+customer_name);
                  $.ajax({
                     type : "POST",
                     url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_details",
@@ -458,7 +456,6 @@
                            }
                             //title issue
                             element_title += "<div class='title-txt'>";
-                            // element_title += "<img src='/app/images/101o/ro_dealer/question.png' id='detail-title' style='max-width:30px'>";
                             element_title +="<div id='code-issue'>ID : "+value.roomid+"</div>";
                             element_title +="<div id='title-is'>"+title+"</div>";
                             element_title += "</div>";
@@ -472,9 +469,7 @@
 
     //get chat details
     function get_chat_details(customer_name,room_id,user_id,ln=0){
-               if ($("#chat_actv").html()==room_id)
-				{
-					//ln=parseInt$(("#linenum").html());
+               if ($("#chat_actv").html()==room_id){
 					ln=0;
 				}
 				else
@@ -491,15 +486,8 @@
 				"ln": ln
                 },success:function(json){
 					var theTotal = json.result.length;      
-					if (ln==0)
-					{
-						var element ="";
-					}
-					else
-					{
-						var element =$(".chat-logs").html();
-					}
-					
+					if (ln==0){ var element =""; }
+					else { var element =$(".chat-logs").html(); }
 					var element_before=$(".chat-logs").html();
 					var linenum=element_before.split("chattyoalsdfghjk").length - 1;
                     
@@ -508,16 +496,13 @@
                         get_information(user_id);
                         var count = 0;
                         $.each(json.result, function( index, value ) {
-                        // var msg_content = value.msg_content, user_type = value.type, name = value.name, datetime = value.datetime,msg_type=value.msg_type,notif=value.notif;
                             var msg_content = value.msg_content, download_file = value.msg_content ,user_type = value.type, name = value.name, datetime = value.datetime, msg_type=value.msg_type, notif=value.notif, chat_user_id=value.uid; 
                             if(isNotBlank(msg_content)){
                             if (notif != 1){
-                            // if(user_type == "helpdesk"){
                                if (chat_user_id == user_id){
                             element += "<div tag='chattyoalsdfghjk' class='chat-self'>";
                               element +="<div class='datetime-self'>You, "+datetime+"</div>";
                                     element +="<div class='self-photo'><img src='/app/images/101o/ro_dealer/helpdesk-photo.png' id='img-photo'></div>";
-                                    // element +="<div class='msg-self'>"+msg_content+"</div>";
                                     switch (msg_type) {
                                     case 'image':
                                          element +="<a href='#ex1' rel='modal:open' style='width: 300px;' class='msg-self'><img src="+msg_content+" class='img-msg'></a>";
@@ -526,7 +511,6 @@
                                          element +="<div class='msg-self'>"+msg_content+"</div>";
                                         break;
                                     case 'file':
-                                        // download_file = $.base64('encode',download_file);
                                         element +="<a class='msg-self-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download_self'>Download File [ "+baseName(msg_content)+" ]</p></a>";
                                         break;
                                     case 'video':
@@ -538,7 +522,6 @@
                                  element += "<div tag='chattyoalsdfghjk' class='chat-self'>";
                               element +="<div class='datetime-self'>"+capitalizeFirstLetter(name)+", "+datetime+"</div>";
                                     element +="<div class='self-photo'><img src='/app/images/101o/ro_dealer/helpdesk-photo.png' id='img-photo'></div>";
-                                    // element +="<div class='msg-self'>"+msg_content+"</div>";
                                     switch (msg_type) {
                                     case 'image':
                                          element +="<a href='#ex1' rel='modal:open' style='margin-bottom:5px;'  class='msg-self'><img src="+msg_content+" class='img-msg'></a>";
@@ -579,8 +562,6 @@
                         // notif 1    
                         }else{
                             element += "<div tag='chattyoalsdfghjk' class='chat-customer'>";
-                            // element +="<div class='user-photo'><img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='img-photo'></div>";
-                            // element +="<div class='datetime-customer'>"+capitalizeFirstLetter(name)+", "+datetime+"</div><br>";
                             element +="<div class='msg-customer' style='background:#666; margin-top:30px;'>"+msg_content+"</div>";
                             element += "</div>"; // chat-customer
                         }  
@@ -589,10 +570,7 @@
                             }//if chat empty
 
                         }); //for loop
-						
-						//var numx=ln+count+0;
-						//$("#linenum").html(numx);
-						
+					
                         $(".chat-logs").html(element);
 						var numx=element.split("chattyoalsdfghjk").length - 1;
 						
@@ -794,9 +772,7 @@
             $(".text-box #text-area").html(textarea);
             $(".text-box #text-area").append("<button id='close-btn' style='display:none;'>Close Session</button>");
             $(".text-box #text-area").append("<button id='handler-btn'>Handle Chat</button>");
-            // button take over
             $(".text-box #text-area").append("<button id='take_over_btn'>Take Over</button>");
-
             var hidden_input = "<input type='hidden' id='username'>";
             $(".setting-user").append(hidden_input);
             $("#textareachat").keydown(function(e){
@@ -815,7 +791,6 @@
                 }, 1000);
             });
 
-            //untuk membuka chat pertama yang aktif
             update_chat_history_data();
         },3000);
         
@@ -868,7 +843,6 @@
     $(document).on('click', '.msg-self-file_download', function(){
             var room_id = $(this).attr('room_id');
             var download = $(this).attr('download');
-            // console.log(room_id+' '+msg_content);
             download_files_self(room_id,download);
     });
 
@@ -898,9 +872,6 @@
                "roomid" : room_id,
                "file": baseName(download)
                },success:function(json){
-                //    console.log(json);
-                //  console.log($.base64('decode',json.data));
-                //   $('.msg-customer-file_download').attr("href", json.data);
                   $('.msg-self-file_download').attr("href", json.data);
 
                }
@@ -917,10 +888,7 @@
                "roomid" : room_id,
                "file": baseName(download.replace(/%20/g, ' '))
                },success:function(json){
-                //  console.log($.base64('decode',json.data));
                   $('.msg-customer-file_download').attr("href", json.data);
-                //   $('.msg-self-file_download').attr("href", json.data);
-
                }
         });   
     }
