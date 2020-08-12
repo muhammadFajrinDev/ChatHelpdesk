@@ -1,0 +1,959 @@
+ Nf.ready(function(){  
+       
+    setTimeout(function(){
+            // attach file
+            var attach = "<input id='inp' style='display:none;'  type='file'>";
+            $('.text-box').append(attach);
+            // $('#autotext').click(function() {
+            //   $('#inp')[0].click();
+            // })
+            $('#file-attached').click(function() {
+              $('#inp')[0].click();
+            });
+    
+    },5000);
+        
+    function readFile() {   
+        var filesSelected = $('#inp')[0].files;
+        if (filesSelected && filesSelected[0]) {
+            var filename = filesSelected[0].name;
+                    var reader = new FileReader();
+                            reader.onload = function(event) {
+                            Nf.promptConfirm({
+                                message: "Are you sure want to Send File <br><b><h4>"+filename+"</b></h4>",
+                                handler: function (btn) {
+                                    if (btn == "ok") {
+                                        // setInterval(function(){
+                                        $("#overlay").fadeOut(300);
+                                        // },500);　
+                                        // setTimeout(function(){
+                                         send_chat_files(filename,event.target.result);
+                                        // },1000);　
+                                    }
+                                    if (btn == "cancel") {
+                                       $("#inp").val(null);
+                                    }
+                                },
+                                height: 180,
+                                width: 350     
+                        });
+                };
+            reader.readAsDataURL( filesSelected[0] );
+        }
+    }
+
+    $(document).on('change', '#inp', function(){
+        readFile();
+    });
+
+    //send_chat_files
+   function send_chat_files(filename,filedata){
+    //    console.log(filename+' '+filedata);
+        $(".row-list").each(function(){
+            var message = $('textarea#textareachat').val();
+            var is_active = $(this).attr('is_active');
+            var customer_name = $(this).attr('name');
+            var room_id = $(this).attr('roomid');
+            var uid = $(this).attr('uid');
+            if(is_active == 1){
+            //    console.log(room_id+"-"+customer_name+"-"+user_id+": "+message);
+            //    if(isNotBlank(message)==true && message!=' '){
+                    $.ajax({
+                        type : "POST",
+                        url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_send_chat",
+                        data:{
+                        "uid" : user_id,
+                        "name" :'',
+                        "roomid": room_id,
+                        "message": message,
+                        "submit": '',
+                        "fsubmit": 1,
+                        "fhandle":'',
+                        "fclose" :'',
+                        "filename":filename,
+                        "filedata":filedata
+                        },success:function(json){
+                            console.log('as');
+                             $('textarea#textareachat').val("");
+                             var value = $('.chat-logs')[0].scrollHeight;
+                             $( ".chat-logs" ).scrollTop( value+1000 );
+                            get_chat_details(customer_name,room_id,user_id);
+                    }
+                });
+            
+            //    }
+            }
+        });
+   }
+
+
+    $(document).attr("title", "Chat Helpdesk");
+    $(document).css('--vh', $(window).innerHeight()/100 + 'px');
+	refresh();
+    function takeid(USER_ID){
+        var user_id="";
+        $.ajax({
+                type : "POST",
+                url:"https://101o-sgapp.teleows.com/app/api/usermgt/um_user_get",
+                async: false,  
+                data:{
+                "user_id" : USER_ID
+                },success:function(json){ 
+              
+             user_id = json.result.account_id;
+              
+                    
+            }
+        });
+        return user_id;
+    } 
+ 
+     var user_id = takeid(USER_ID);
+    // var user_id = '12345';
+
+   // DeclaratedInterval
+   let interval;
+   let filter = 'ALL';
+ 
+    $(document).on('change', 'select', function(){
+        filter = this.value; 
+    });
+
+//   setTimeout(function(){
+    setInterval(function(){
+        // console.log(filter);       
+        get_info_chat(user_id,filter);
+        get_info_chat_hendle(user_id,filter);
+        get_info_chat_hendle_byother(user_id,filter);
+        refresh();
+    },1000);
+
+    setInterval(function(){
+        updateChatsLogs(user_id);
+    },12000);
+
+    function timer(value){
+        if(value == 'stop'){
+                clearInterval(interval); 
+            }else{
+                clearInterval(interval); 
+                interval = setInterval(function(){ 
+                update_chat_history_data();
+            },5000);
+        }
+    }
+
+    // Open Chat
+     $(document).on('click', '#search_btn', function(){
+         var room_id_search = $.trim($('#src_text').val());
+        if(isNotBlank(room_id_search)){
+            $.ajax({
+                    type : "POST",
+                    url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/search_chat",
+                    data:{
+                    "uid" : user_id,
+                    "roomid": room_id_search
+                    },success:function(json){ 
+                            get_info_chat_hendle(user_id);
+                            update_chat_history_data();
+                    }
+            });// ajax end
+        }else{
+            Nf.promptAlert({
+                message : "Please Input Ticket ID"
+                });
+        }
+     });
+
+    $(document).on('click', '#take_over_btn', function(){
+        Nf.promptConfirm({
+                message: "Are you sure want to Take over this chat ?",
+                handler: function (btn) {
+                if (btn == "ok") {
+                take_over_chat(user_id);
+                }
+                },
+                height: 180,
+                width: 350     
+        });
+     });
+
+     function take_over_chat(user_id){
+              $(".row-list").each(function(){
+                    var is_active = $(this).attr('is_active');
+                    var room_id = $(this).attr('roomid');
+                    // var uid = $(this).attr('uid');
+                    if(is_active == 1){
+                     $.ajax({
+                            type : "POST",
+                            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/take_over_api",
+                            data:{
+                            "uid" : user_id,
+                            "roomid":room_id,
+                            },success:function(json){ 
+                                // console.log('success');
+                            }
+                        });
+                    }
+        });
+     }
+    
+    // view chat
+     $(document).on('click', '.row-list', function(){
+        timer('stop');
+        var handler_id = $(this).attr('handler_id');
+        var handler_name = $(this).attr('handler_name');
+        var customer_id = $(this).attr('uid');
+        var customer_name = $(this).attr('name');
+        var room_id = $(this).attr('roomid'); 
+    
+        $("#overlay").fadeIn(300);　
+        $.ajax({
+            type : "POST",
+            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_set_active",
+            data:{
+            "uid" : user_id,
+            "roomid": room_id
+            },success:function(json){ 
+                read_chat(user_id,room_id,customer_name);
+                get_chat_details(customer_name,room_id,user_id);
+                $('textarea#textareachat').val("");
+                    setTimeout(function(){
+                        timer('start');
+                    },5000);                    
+        }   
+        });// ajax end
+         
+        if(isNotBlank(handler_name)==true && handler_id == user_id){
+           $('#handler-btn').css("display","none");
+           $("#textareachat").attr("readonly", false); 
+          //$(".text-box").css("display","");
+           $('#textareachat').css("display","");
+           $('#autotext').css("display","");
+           $("#close-btn").css("display","");
+           $('#take_over_btn').css("display","none");
+        }else if(isNotBlank(handler_name) ==true && handler_id != user_id){
+            $("#close-btn").css("display","none");
+            $('#handler-btn').css("display","none");
+            $('#textareachat').css("display","none");
+            $('#autotext').css("display","none");
+            //$(".text-box").css("display","none");   
+            $('#take_over_btn').css("display","");
+        }else if(isNotBlank(handler_name)==false){
+        // $(".text-box").css("display","");
+           $('#handler-btn').css("display","");
+           $("#close-btn").css("display","none");
+           $("#textareachat").attr("readonly", true); 
+           $('#textareachat').css("display","");
+           $('#autotext').css("display","");
+           $('#take_over_btn').css("display","none");
+        }else{
+           $(".text-box").css("display","none");
+        }
+        
+        setTimeout(function(){
+            $("#textareachat").focus();
+        },2000);
+        
+    });
+
+    // hendle_chat
+    function hendle_chat(){
+        $(".row-list").each(function(){
+                    var is_active = $(this).attr('is_active');
+                    var customer_name = $(this).attr('name');
+                    var room_id = $(this).attr('roomid');
+                    var uid = $(this).attr('uid');
+                    if(is_active == 1){
+                     $.ajax({
+                            type : "POST",
+                            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_send_chat",
+                            data:{
+                            "uid" : user_id,
+                            "name":'',
+                            "roomid": room_id,
+                            "message": '',
+                            "submit": '',
+                            "fhandle": 1,
+                            "fclose":'',
+                            "filename":'',
+                            "filedata":''
+                            },success:function(json){ 
+                                    $.ajax({
+                                        type : "POST",
+                                        url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_set_active",
+                                        data:{
+                                        "uid" : user_id,
+                                        "roomid": room_id
+                                        },success:function(json){ 
+                                        read_chat(user_id,room_id,customer_name);
+                                        $("#textareachat").attr("readonly", false); 
+                                        $('#handler-btn').css("display","none");
+                                        }
+                                    });
+                            }
+                        });
+                    }
+        });
+    }
+
+     $(document).on('click', '#handler-btn', function(){
+        Nf.promptConfirm({
+                message: "Are you sure want to handle this chat?",
+                handler: function (btn) {
+                if (btn == "ok") {
+                     hendle_chat();
+                }
+                },
+                height: 180,
+                width: 350
+        });
+     });
+
+    // Close Session
+    function close_session(){
+        $(".row-list").each(function(){
+        var is_active = $(this).attr('is_active');
+        var customer_name = $(this).attr('name');
+        var room_id = $(this).attr('roomid');
+        var uid = $(this).attr('uid');
+            if(is_active == 1){
+                closeSession(room_id);
+                 $.ajax({
+                            type : "POST",
+                            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_send_chat",
+                            data:{
+                           "uid" : user_id,
+                            "name":'',
+                            "roomid": room_id,
+                            "message": '',
+                            "submit": '',
+                            "fhandle": '',
+                            "fclose": 1,
+                            "filename":'',
+                            "filedata":''
+                            },success:function(json){ 
+                                $.ajax({
+                                        type : "POST",
+                                        url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_set_active",
+                                        data:{
+                                        "uid" : user_id,
+                                        "roomid": room_id
+                                        },success:function(json){ 
+                                            $( ".chat-customer" ).remove();
+                                            $( ".chat-self" ).remove();
+                                            // $(".text-box").css("display","none");  
+                                            get_info_chat_hendle(user_id); 
+                                        }
+                                });
+                            }
+                });
+            }
+        });
+    }
+
+    $(document).on('click', '#close-btn', function(){
+        Nf.promptConfirm({
+                message: "This Session will be Backup and closed Are you sure want to close this session?",
+                handler: function (btn) {
+                if (btn == "ok") {
+                close_session();
+                $('.chat-logs').html('');
+                }
+                },
+                height: 180,
+                width: 350     
+        });
+     });
+     
+   //send_chat
+   function send_chat(){
+        $(".row-list").each(function(){
+            var message = $('textarea#textareachat').val();
+            var is_active = $(this).attr('is_active');
+            var customer_name = $(this).attr('name');
+            var room_id = $(this).attr('roomid');
+            var uid = $(this).attr('uid');
+            if(is_active == 1){
+            //    console.log(room_id+"-"+customer_name+"-"+user_id+": "+message);
+               if(isNotBlank(message)==true && message!=' '){
+                    $.ajax({
+                        type : "POST",
+                        url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_send_chat",
+                        data:{
+                        "uid" : user_id,
+                        "name" :'',
+                        "roomid": room_id,
+                        "message": message,
+                        "submit": 1,
+                        "fsubmit":'',
+                        "fhandle":'',
+                        "fclose" :'',
+                        "filename":'',
+                        "filedata":''
+                        },success:function(json){
+                             $('textarea#textareachat').val("");
+                             var value = $('.chat-logs')[0].scrollHeight;
+                             $( ".chat-logs" ).scrollTop( value+1000 );
+                             //var xox=parseInt($("#linenum").html())+0;
+							 //$("#linenum").html(xox);
+                            get_chat_details(customer_name,room_id,user_id);
+                    }
+                });
+            
+               }
+            }
+        });
+   }
+
+    // Update Chat Hystori
+    function update_chat_history_data(){
+        $(".row-list").each(function(){
+            var handler_id = $(this).attr('handler_id');
+            var handler_name = $(this).attr('handler_name');
+            var room_id = $(this).attr('roomid');
+            var customer_name = $(this).attr('name');
+            var is_active = $(this).attr('is_active');
+            if(is_active == 1){
+                get_chat_details(customer_name,room_id,user_id); 
+                read_chat(user_id,room_id,customer_name);
+            }
+        });
+    }
+
+    //Read chat function
+    function read_chat(user_id,room_id,customer_name){
+        //  console.log(user_id+' '+room_id+' '+customer_name);
+                 $.ajax({
+                    type : "POST",
+                    url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_details",
+                    data:{
+                    "uid" : user_id,
+                    "roomid": room_id,
+                    "name" : customer_name,
+                    "foc": 1
+                    },success:function(json){ 
+                }
+            });
+    }
+     // info chat not hendle
+    function get_information(user_id){    
+        $.ajax({
+            type : "POST",
+            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_info",
+            data:{
+            "uid" : user_id,
+            "region" : "ALL"
+            },success:function(json){
+            var theTotal = json.result.length;
+            var element_title='';
+            var title;
+            //  console.log(json);
+            if (theTotal > 0) {
+                $.each(json.result, function( index, value ) {  
+                        if(value.is_active == 1 ){ 
+                             title = value.title;    
+                           if(isNotBlank(title)!=true){
+                             title = 'Unknown Problem';
+                           }
+                       
+                            //title issue
+                            element_title += "<div class='title-txt'>";
+                            // element_title += "<img src='/app/images/101o/ro_dealer/question.png' id='detail-title' style='max-width:30px'>";
+                            element_title +="<div id='code-issue'>ID : "+value.roomid+"</div>";
+                            element_title +="<div id='title-is'>"+title+"</div>";
+                            element_title += "</div>";
+                         } 
+                          $(".chatbox .title-issue").html(element_title);                
+               }); //for loop
+            }
+            }
+        });
+    } // end function
+
+    //get chat details
+    function get_chat_details(customer_name,room_id,user_id,ln=0){
+               if ($("#chat_actv").html()==room_id)
+				{
+					//ln=parseInt$(("#linenum").html());
+					ln=0;
+				}
+				else
+				{
+					$("#chat_actv").html(room_id);
+					ln=0;
+				}
+				$.ajax({
+                type : "POST",
+                url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_details",
+                data:{
+                "uid" : customer_name,
+                "roomid": room_id,
+				"ln": ln
+                },success:function(json){
+					var theTotal = json.result.length;      
+					if (ln==0)
+					{
+						var element ="";
+					}
+					else
+					{
+						var element =$(".chat-logs").html();
+					}
+					
+					var element_before=$(".chat-logs").html();
+					var linenum=element_before.split("chattyoalsdfghjk").length - 1;
+                    
+					var element_title ="";
+                    if (theTotal > 0) {
+                        get_information(user_id);
+                        var count = 0;
+                        $.each(json.result, function( index, value ) {
+                        // var msg_content = value.msg_content, user_type = value.type, name = value.name, datetime = value.datetime,msg_type=value.msg_type,notif=value.notif;
+                            var msg_content = value.msg_content, download_file = value.msg_content ,user_type = value.type, name = value.name, datetime = value.datetime, msg_type=value.msg_type, notif=value.notif, chat_user_id=value.uid; 
+                            if(isNotBlank(msg_content)){
+                            if (notif != 1){
+                            // if(user_type == "helpdesk"){
+                               if (chat_user_id == user_id){
+                            element += "<div tag='chattyoalsdfghjk' class='chat-self'>";
+                              element +="<div class='datetime-self'>You, "+datetime+"</div>";
+                                    element +="<div class='self-photo'><img src='/app/images/101o/ro_dealer/helpdesk-photo.png' id='img-photo'></div>";
+                                    // element +="<div class='msg-self'>"+msg_content+"</div>";
+                                    switch (msg_type) {
+                                    case 'image':
+                                         element +="<a href='#ex1' rel='modal:open' style='width: 300px;' class='msg-self'><img src="+msg_content+" class='img-msg'></a>";
+                                        break;
+                                    case 'text':
+                                         element +="<div class='msg-self'>"+msg_content+"</div>";
+                                        break;
+                                    case 'file':
+                                        // download_file = $.base64('encode',download_file);
+                                        element +="<a class='msg-self-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download_self'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    case 'video':
+                                        element +="<a class='msg-self-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download_self'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    }
+                            element += "</div>"; // chat-self
+                            }else if (user_type == "helpdesk" && chat_user_id != user_id){
+                                 element += "<div tag='chattyoalsdfghjk' class='chat-self'>";
+                              element +="<div class='datetime-self'>"+capitalizeFirstLetter(name)+", "+datetime+"</div>";
+                                    element +="<div class='self-photo'><img src='/app/images/101o/ro_dealer/helpdesk-photo.png' id='img-photo'></div>";
+                                    // element +="<div class='msg-self'>"+msg_content+"</div>";
+                                    switch (msg_type) {
+                                    case 'image':
+                                         element +="<a href='#ex1' rel='modal:open' style='margin-bottom:5px;'  class='msg-self'><img src="+msg_content+" class='img-msg'></a>";
+                                        break;
+                                    case 'text':
+                                         element +="<div class='msg-self'>"+msg_content+"</div>";
+                                        break;
+                                    case 'file':
+                                        element +="<a class='msg-self-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download_self'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    case 'video':
+                                        element +="<a class='msg-self-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download_self'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    }
+                            element += "</div>"; // chat-self
+                            }
+                            else
+                            {
+                           element += "<div tag='chattyoalsdfghjk' class='chat-customer'>";
+                                    element +="<div class='user-photo'><img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='img-photo'></div>";
+                                    element +="<div class='datetime-customer'>"+capitalizeFirstLetter(name)+", "+datetime+"</div><br>";
+                                    switch (msg_type) {
+                                    case 'image':
+                                         element +="<a href='#ex1' rel='modal:open' style='margin-bottom:5px;' class='msg-customer-file'><img src="+msg_content+" class='img-msg'></a>";
+                                        break;
+                                    case 'text':
+                                         element +="<div class='msg-customer'>"+msg_content+"</div>";
+                                        break;
+                                    case 'file':
+                                        element +="<a class='msg-customer-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/file_img.png' id='img-file'> <p id='span_link_download'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    case 'video':
+                                        element +="<a class='msg-customer-file_download' download="+baseName(msg_content)+" room_id="+room_id+" msg_content="+baseName(msg_content)+" href=''><img src='/app/images/101o/ro_dealer/iconvideo.png' id='img-file'> <p id='span_link_download'>Download File [ "+baseName(msg_content)+" ]</p></a>";
+                                        break;
+                                    }
+                            element += "</div>"; // chat-customer
+                            }
+                        // notif 1    
+                        }else{
+                            element += "<div tag='chattyoalsdfghjk' class='chat-customer'>";
+                            // element +="<div class='user-photo'><img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='img-photo'></div>";
+                            // element +="<div class='datetime-customer'>"+capitalizeFirstLetter(name)+", "+datetime+"</div><br>";
+                            element +="<div class='msg-customer' style='background:#666; margin-top:30px;'>"+msg_content+"</div>";
+                            element += "</div>"; // chat-customer
+                        }  
+                        count++;    
+
+                            }//if chat empty
+
+                        }); //for loop
+						
+						//var numx=ln+count+0;
+						//$("#linenum").html(numx);
+						
+                        $(".chat-logs").html(element);
+						var numx=element.split("chattyoalsdfghjk").length - 1;
+						
+						setTimeout(function(){
+                                $("#overlay").fadeOut(300);
+                            },500);
+							
+						if (numx!=linenum)
+						{
+							 var value = $('.chat-logs')[0].scrollHeight;
+                             $( ".chat-logs" ).scrollTop( value+1000);
+						}
+                            
+                         
+                    }
+                }
+            });   
+    }
+
+    // info chat hendle
+    function get_info_chat_hendle(user_id,filter){    
+           $.ajax({
+            type : "POST",
+            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_info",
+            data:{
+            "uid" : user_id,
+            "region" : filter
+            },success:function(json){
+            // total
+            var theTotal = json.result.length;
+            if (theTotal > 0) {
+                var element = '';
+                var notification =  '';
+                var selector = '';
+                var detail ='';
+                var title = '';
+                var totChat = 0;
+                $.each(json.result, function( index, value ) {
+                    if(value.handler_id == user_id){   
+                        if(value.is_active == 1 ){ var addClass ="selector"; }     
+                        if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
+                    element += "<div class='row-list "+addClass+"' uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+" >";
+                    element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-handle' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>by You</span></div>";
+                    element += "";
+                    element += "</div>"; 
+                    totChat++;
+                    }
+               }); //for loop
+          
+            }else{
+                $(".list-handles").html('');
+                totChat = 0;
+            }
+               $("#inHandle").html(totChat+" Chats <img src='/app/images/101o/ro_dealer/drop-down-arrow.png' id='collapse'>");
+               $(".list-handles").html(element);
+            }
+        });
+    } // end function
+
+      //info hendle by other
+     function get_info_chat_hendle_byother(user_id,filter){    
+         $.ajax({
+            type : "POST",
+            url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_info",
+            data:{
+            "uid" : user_id,
+            "region" : filter
+            },success:function(json){
+            var theTotal = json.result.length;
+            if (theTotal > 0) {
+                var element = '', notification =  '', totChat = 0;
+                $.each(json.result, function( index, value ) {
+                    
+                    if(value.handler_id != user_id && value.handler_id != ''){  
+                    
+                    if(value.is_active == 1){
+                         var addClass ="selector";
+                    }    
+                    if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
+                    
+                    element += "<div class='row-list "+addClass+"'  uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+">";
+                    element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-other' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>by "+value.handler_name+"</span></div>";
+                    element += "";
+                    element += "</div>"; 
+                    totChat++;
+                    
+                    }
+               }); //for loop
+
+            }else{
+                  $(".list-handle-other").html('');
+                  totChat = 0;
+            }
+               $("#handleOther").html(totChat+" Chats <img src='/app/images/101o/ro_dealer/drop-down-arrow.png' id='collapse'>");
+               $(".list-handle-other").html(element);
+            }
+        });
+    } // end function
+
+    // info chat not hendle
+    function get_info_chat(user_id,filter){    
+        $.ajax({
+            type : "POST",
+            url:"	https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_info",
+            data:{
+            "uid" : user_id,
+            "region" : filter
+            },success:function(json){
+            // total
+            if(json.result != 'NOK'){
+            var theTotal = json.result.length;
+            // console.log(json);
+            if (theTotal > 0) {
+                var element = "";
+                var notification =  "";
+                var title;
+                var totChat = 0;
+                $.each(json.result, function( index, value ) {
+                    if(value.handler_id == ''){     
+                        
+                        if(value.is_active == 1 ){
+                           var addClass ="selector";   
+                         } 
+
+                    if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
+                    element += "<div class='row-list "+addClass+"' uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+" >";
+                    element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-chat' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>Not Handle Yet</span></div>";
+                    // element += "";
+                    element += "</div>"; 
+                    totChat++;
+                    }
+          
+               }); //for loop
+        
+            }else{
+                  $(".list-all-chats").html('');
+                  totChat = 0;
+            }
+               $("#nothanldenum").html(totChat+" Chats <img src='/app/images/101o/ro_dealer/drop-down-arrow.png' id='collapse'>");
+               $(".list-all-chats").html(element);
+                }else{                  
+                    Nf.promptAlert({
+                            message : "Sorry, you don't have permission to open this page. Please Contact Helpdesk Developer.",
+                                    handler: function (btn) {
+                                        if (btn == "ok") {
+                                           sandBox.close();
+                                        }
+                                    },
+                                height: 180,
+                                width: 350     
+                            });
+                } //end nok
+            }
+        });
+    } // end function
+
+    $(window).load(function() {
+        setTimeout(function(){
+
+            var category = U.getUrlParameter("category");
+            console.log(category);
+            if(isNotBlank(category)){
+
+                if(category='handle_by_you'){
+                  $('.list-handles').css('display','block');
+                }else if(category='handle_by_other'){
+                  $('.list-handle-other').css('display','block');
+                }else if(category='not_handle'){
+                  $('.list-all-chats').css('display','block');
+                }
+
+            }
+
+            // Show hide popover
+            $("#inHandle").click(function(){
+                $(".list-handles").slideToggle("fast");
+            });
+
+            $("#handleOther").click(function(){
+                $(".list-handle-other ").slideToggle("fast");
+            });
+                
+            $("#nothanldenum").click(function(){
+                $(".list-all-chats").slideToggle("fast");
+            });
+
+                   
+            //button open chat
+            var input = "<input type='text'placeholder='Please insert Ticket id' id=src_text><button id='search_btn'>Open Chat</button>";    
+            $("#input_sch").html(input);
+            
+            var dropdown = "<div class='custom-select'>";
+            dropdown += "Filter Region";
+            dropdown += "<select class='target'>";
+            dropdown += "<option value='ALL'>ALL</option>";
+            dropdown += "<option value='CENTRAL'>CENTRAL</option>";
+            dropdown += "<option value='JABO'>JABO</option>";
+            dropdown += "<option value='EAST'>EAST</option>";
+            dropdown += "<option value='WEST'>WEST</option>";
+            dropdown += "<option value='Unknown'>UNKNOWN</option>";
+            dropdown += "</select>";
+            dropdown += "</div>";
+            
+            $("#dropdown_filter").html(dropdown);
+
+            var modal="";
+            modal+="<div id='ex1' class='modal'>";    
+            modal+="<img src='' id='modal-img'>";
+            modal+="</div>";
+
+            $(".setting-user").html(modal);
+
+            $(document).on('click', '.img-msg', function(){
+                    var base64 = $(this).attr('src');
+                    $('#modal-img').attr("src", base64);
+            });
+
+            // $(".text-box").css("display","none");   
+            // <img src="https://img.icons8.com/fluent/48/000000/attach.png"/>
+            // var btn_attach = "<img src='https://img.icons8.com/fluent/48/000000/attach.png' id='autotext'>";
+            // $("#file-attached").html(btn_attach);
+            $("#file-attached").css({"background": "url(https://img.icons8.com/fluent/48/000000/attach.png) no-repeat center"});
+            var textarea = "<textarea placeholder='Write a message..' id='textareachat' readonly></textarea>";
+            $(".text-box #text-area").html(textarea);
+            $(".text-box #text-area").append("<button id='close-btn' style='display:none;'>Close Session</button>");
+            $(".text-box #text-area").append("<button id='handler-btn'>Handle Chat</button>");
+            // button take over
+            $(".text-box #text-area").append("<button id='take_over_btn'>Take Over</button>");
+
+            var hidden_input = "<input type='hidden' id='username'>";
+            $(".setting-user").append(hidden_input);
+            $("#textareachat").keydown(function(e){
+                    if (e.keyCode == 13 && !e.shiftKey)
+                    {
+                    e.preventDefault();
+                    //Kirim Pesan
+                    send_chat();
+                    }
+            });
+
+            $(document).on('click', '.circle-drop', function(){
+                    var value = $('.chat-logs')[0].scrollHeight;
+                $('.chat-logs').animate({
+                        scrollTop: value+1000
+                }, 1000);
+            });
+
+            //untuk membuka chat pertama yang aktif
+            update_chat_history_data();
+        },3000);
+        
+    }); // load window
+
+    function refresh(){
+        $(".row-list").each(function(){ 
+        var handler_id = $(this).attr('handler_id');
+        var handler_name = $(this).attr('handler_name');
+        var customer_id = $(this).attr('uid');
+        var customer_name = $(this).attr('name');
+        var room_id = $(this).attr('roomid'); 
+        var is_active = $(this).attr('is_active');
+        if(is_active == 1){
+            //  console.log("hendlername: "+handler_name+" handler_id: "+handler_id+" User_id:"+user_id);
+            if(isNotBlank(handler_name)==true && handler_id == user_id){
+                $('#handler-btn').css("display","none");
+                $("#textareachat").attr("readonly", false); 
+                //$(".text-box").css("display","");
+                $('#textareachat').css("display","");
+                $('#autotext').css("display","");
+                $("#close-btn").css("display","");
+                $('#take_over_btn').css("display","none");
+            }else if(isNotBlank(handler_name) ==true && handler_id != user_id){
+                $("#close-btn").css("display","none");
+                $('#handler-btn').css("display","none");
+                $('#textareachat').css("display","none");
+                $('#autotext').css("display","none");
+                $('#take_over_btn').css("display","");
+                //$(".text-box").css("display","none");   
+            }else if(isNotBlank(handler_name)==false){
+                // $(".text-box").css("display","");
+                $('#handler-btn').css("display","");
+                $("#close-btn").css("display","none");
+                $("#textareachat").attr("readonly", true); 
+                $('#textareachat').css("display","");
+                $('#autotext').css("display","");
+                $('#take_over_btn').css("display","none");
+            }else{
+                $(".text-box").css("display","none");
+            }
+        }
+         });
+    }
+    
+    // Download File
+    $(document).on('click', '.msg-customer-file_download', function(){
+            var room_id = $(this).attr('room_id');
+            var download = $(this).attr('download');
+            console.log(room_id+' '+download);
+            download_files_customer(room_id,download);
+    });
+
+    $(document).on('click', '.msg-self-file_download', function(){
+            var room_id = $(this).attr('room_id');
+            var download = $(this).attr('download');
+            // console.log(room_id+' '+msg_content);
+            download_files_self(room_id,download);
+    });
+
+
+    function download_files_self(room_id,download){
+        $.ajax({
+              type : "POST",
+              async: false ,
+               url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_file_api",
+               data:{
+               "roomid" : room_id,
+               "file": baseName(download)
+               },success:function(json){
+                //    console.log(json);
+                //  console.log($.base64('decode',json.data));
+                //   $('.msg-customer-file_download').attr("href", json.data);
+                  $('.msg-self-file_download').attr("href", json.data);
+
+               }
+        });   
+    }
+ 
+    function download_files_customer(room_id,download){
+           console.log(download.replace(/%20/g, ' '));
+        $.ajax({
+              type : "POST",
+              async: false ,
+               url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_file_api",
+               data:{
+               "roomid" : room_id,
+               "file": baseName(download.replace(/%20/g, ' '))
+               },success:function(json){
+                //  console.log($.base64('decode',json.data));
+                  $('.msg-customer-file_download').attr("href", json.data);
+                //   $('.msg-self-file_download').attr("href", json.data);
+
+               }
+        });   
+    }
+
+
+    function isEmpty( el ){
+      return !$.trim(el.html())
+    }
+    
+    function baseName(str)
+    {
+    var base = new String(str).substring(str.lastIndexOf('/') + 1); 
+    return base;
+    }
+
+    function isNotBlank(a){if(null!=a&&undefined!=a&&""!=a&&"null"!=a&&"undefined"!=a){return true}return false}; 
+
+
+    function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+});
