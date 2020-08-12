@@ -1,0 +1,76 @@
+<div class="setting-user">
+            &nbsp;
+</div>
+<div class="sidepanel">
+    <div class="search_chat">
+        <div id="input_sch">
+
+        </div>
+        <div id="dropdown_filter">
+
+        </div>
+    </div>
+    <div class="box-inhandle">
+            <div class="title-handle">
+                <h2> In Handle </h2>
+                    <div id="inHandle">
+                    
+                </div>
+                <p><span>When chat in handle, other  people can find this message</span></p>
+            <hr>
+            </div>
+            <div class="list-handles">
+            
+            </div>
+    </div>
+     <div class="box-handle-others">
+            <div class="title-handle-others">
+                <h2> Handled by Other </h2>
+                  <div id="handleOther">
+                    
+                </div>
+                <p><span>You can see chat room handled by other (read only)</span></p>
+            <hr>
+            </div>
+            <div class="list-handle-other">         
+             
+            </div>
+    </div>
+    <div class="box-all-chats">
+            <div class="title-all-chats">
+                <h2> <span>Not Handled Yet</span> </h2>
+                <div id="nothanldenum">
+                    
+                </div>
+                <p><span>Please handle this customer's chat if you are available</span></p>
+            <hr>
+            </div>
+            <div class="list-all-chats">     
+            
+            </div>
+    </div>
+</div>
+<div class="chatbox">
+ <div id="linenum">&nbsp;</div>
+ <div id="chat_actv">&nbsp;</div>
+    <div id="overlay">
+ <div class="cv-spinner">
+  <span class="spinner">&nbsp;</span>
+        </div>
+    </div>
+    <div class="title-issue">
+    &nbsp;
+    </div>
+    <div class="chat-logs">
+            
+    </div>   
+         <div class="circle-drop"> 
+         <img src ="/app/images/101o/ro_dealer/drop-down-arrow.png" id="arrow"> 
+    </div> 
+</div>
+<div class="text-box">
+    <div id="file-attached">&nbsp;</div>
+    <div id="text-area">&nbsp;</div>
+
+</div>
+    
