@@ -4,9 +4,6 @@
             // attach file
             var attach = "<input id='inp' style='display:none;'  type='file'>";
             $('.text-box').append(attach);
-            // $('#autotext').click(function() {
-            //   $('#inp')[0].click();
-            // })
             $('#file-attached').click(function() {
               $('#inp')[0].click();
             });
@@ -23,12 +20,8 @@
                                 message: "Are you sure want to Send File <br><b><h4>"+filename+"</b></h4>",
                                 handler: function (btn) {
                                     if (btn == "ok") {
-                                        // setInterval(function(){
                                         $("#overlay").fadeOut(300);
-                                        // },500);　
-                                        // setTimeout(function(){
                                          send_chat_files(filename,event.target.result);
-                                        // },1000);　
                                     }
                                     if (btn == "cancel") {
                                        $("#inp").val(null);
@@ -48,7 +41,6 @@
 
     //send_chat_files
    function send_chat_files(filename,filedata){
-    //    console.log(filename+' '+filedata);
         $(".row-list").each(function(){
             var message = $('textarea#textareachat').val();
             var is_active = $(this).attr('is_active');
@@ -56,8 +48,6 @@
             var room_id = $(this).attr('roomid');
             var uid = $(this).attr('uid');
             if(is_active == 1){
-            //    console.log(room_id+"-"+customer_name+"-"+user_id+": "+message);
-            //    if(isNotBlank(message)==true && message!=' '){
                     $.ajax({
                         type : "POST",
                         url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_send_chat",
@@ -80,8 +70,6 @@
                             get_chat_details(customer_name,room_id,user_id);
                     }
                 });
-            
-            //    }
             }
         });
    }
@@ -226,7 +214,6 @@
         if(isNotBlank(handler_name)==true && handler_id == user_id){
            $('#handler-btn').css("display","none");
            $("#textareachat").attr("readonly", false); 
-          //$(".text-box").css("display","");
            $('#textareachat').css("display","");
            $('#autotext').css("display","");
            $("#close-btn").css("display","");
@@ -235,11 +222,9 @@
             $("#close-btn").css("display","none");
             $('#handler-btn').css("display","none");
             $('#textareachat').css("display","none");
-            $('#autotext').css("display","none");
-            //$(".text-box").css("display","none");   
+            $('#autotext').css("display","none"); 
             $('#take_over_btn').css("display","");
         }else if(isNotBlank(handler_name)==false){
-        // $(".text-box").css("display","");
            $('#handler-btn').css("display","");
            $("#close-btn").css("display","none");
            $("#textareachat").attr("readonly", true); 
@@ -373,7 +358,6 @@
             var room_id = $(this).attr('roomid');
             var uid = $(this).attr('uid');
             if(is_active == 1){
-            //    console.log(room_id+"-"+customer_name+"-"+user_id+": "+message);
                if(isNotBlank(message)==true && message!=' '){
                     $.ajax({
                         type : "POST",
@@ -393,8 +377,6 @@
                              $('textarea#textareachat').val("");
                              var value = $('.chat-logs')[0].scrollHeight;
                              $( ".chat-logs" ).scrollTop( value+1000 );
-                             //var xox=parseInt($("#linenum").html())+0;
-							 //$("#linenum").html(xox);
                             get_chat_details(customer_name,room_id,user_id);
                     }
                 });
