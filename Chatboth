@@ -97,7 +97,7 @@
     } 
  
     var user_id = takeid(USER_ID);
-
+  
    // DeclaratedInterval
    let interval;
    let filter = 'ALL';
@@ -107,8 +107,7 @@
     });
 
 //   setTimeout(function(){
-    setInterval(function(){
-        // console.log(filter);       
+    setInterval(function(){   
         get_info_chat(user_id,filter);
         get_info_chat_hendle(user_id,filter);
         get_info_chat_hendle_byother(user_id,filter);
@@ -583,15 +582,15 @@
             },success:function(json){
             var theTotal = json.result.length;
             if (theTotal > 0) {
-                var element="",notification="",selector="",detail="",title="",totChat = 0;
+                var element="",notification="",selector="",detail="",title="",totChat = 0, addExport = "";
                 $.each(json.result, function( index, value ) {
                         if(value.handler_id == user_id){   
                             if(filter == getRegionTicket(value.roomid,filter)){
-                            if(value.is_active == 1 ){ var addClass ="selector"; }     
+                            if(value.is_active == 1 ){ var addClass ="selector"; addExport = "<a id='img-export' download='"+value.roomid+".txt' data ="+value.roomid+"><img src='/app/images/101o/ro_dealer/export.png'></a>"; }else{ addExport ='';}     
                             if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
                             element += "<div class='row-list "+addClass+"' uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+" >";
                             element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-handle' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>by You</span></div>";
-                            element += "";
+                            element += addExport;
                             element += "</div>"; 
                             totChat++;
                         }
@@ -618,15 +617,15 @@
             success:function(json){
             var theTotal = json.result.length;
             if (theTotal > 0) {
-                var element = '', notification =  '', totChat = 0;
+                var element = '', notification =  '', totChat = 0,addExport = "";
                 $.each(json.result, function( index, value ) {
                     if(value.handler_id != user_id && value.handler_id != ''){
                         if(filterValue == getRegionTicket(value.roomid,filterValue)){
-                            if(value.is_active == 1){ var addClass ="selector"; }    
+                            if(value.is_active == 1){ var addClass ="selector"; addExport = "<a id='img-export' download='"+value.roomid+".txt' data ="+value.roomid+"><img src='/app/images/101o/ro_dealer/export.png'></a>"; }else{ addExport ='';} 
                             if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
                             element += "<div class='row-list "+addClass+"'  uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+">";
                             element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-other' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>by "+value.handler_name+"</span></div>";
-                            element += "";
+                            element += addExport;
                             element += "</div>"; 
                             totChat++;
                         }
@@ -652,14 +651,15 @@
             if(json.result != 'NOK'){
             var theTotal = json.result.length;
             if (theTotal > 0) {
-                var element="",notification="",title,totChat = 0;
+                var element="",notification="",title,totChat = 0,addExport = "";
                 $.each(json.result, function( index, value ) {
                     if(value.handler_id == ''){   
                         if(filter==getRegionTicket(value.roomid,filter)){
-                            if(value.is_active == 1 ){ var addClass ="selector"; } 
+                            if(value.is_active == 1 ){ var addClass ="selector";  addExport = "<a id='img-export' download='"+value.roomid+".txt' data ="+value.roomid+"><img src='/app/images/101o/ro_dealer/export.png'></a>"; }else{ addExport ='';} 
                             if(value.new_chat == 1){ notification = "<img src='/app/images/101o/ro_dealer/notification_chat.png' id='notification'>"; }else{ notification="<img src='/app/images/101o/ro_dealer/offline-notification.png' id='notification'>"; }
                             element += "<div class='row-list "+addClass+"' uid="+value.cust_id+" name="+value.cust_name+" roomid="+value.roomid+" is_active="+value.is_active+" handler_id="+value.handler_id+" handler_name="+value.handler_name+" >";
                             element += "<img src='/app/images/101o/ro_dealer/avatar-default-icons.png' id='list-photo'>"+notification+"<div id='list-chat' uid="+value.cust_id+"><div id='username-list'>"+capitalizeFirstLetter(value.cust_name)+"</div><span id='room_id_list'>ID : "+value.roomid+"</span><br style='height:10px;'><span id='information_by'>Not Handle Yet</span></div>";
+                            element += addExport;
                             element += "</div>"; 
                             totChat++;
                         }
@@ -827,6 +827,26 @@
             var download = $(this).attr('download');
             download_files_self(room_id,download);
     });
+
+    $(document).on('click', '#img-export', function(){
+        var roomid = $(this).attr('data');
+            export_chats(roomid,user_id);           
+    });
+
+    function export_chats(roomid,user_id){
+         $.ajax({
+              type : "POST",
+              async: false ,
+               url:"https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/chatbox_get_details",
+               data:{
+               "roomid" : roomid,
+               "uid" : user_id,
+               "save" : 1
+               },success:function(json){
+                  $('#img-export').attr("href", json.data);
+               }
+        }); 
+    }
 
     function getRegionTicket(ticketid,region){
         var result ="",service = "https://101o-sgapp.teleows.com/app/api/ro_dealer_complaint/get_region_ticket";
